@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Playlist {
+  id        String   @id @default(cuid())
+  name      String
+  type      String   @default("m3u") // "xtream" | "m3u"
+  // For M3U playlists
+  m3uUrl    String?
+  // For Xtream playlists
+  xtreamUrl    String?
+  xtreamUser   String?
+  xtreamPass   String?
+  // Metadata
+  channelCount Int      @default(0)
+  lastSynced   DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  channels  Channel[]
+  favorites Favorite[]
+}
+
+model Channel {
+  id         String   @id @default(cuid())
+  name       String
+  logo       String?
+  url        String
+  group      String?
+  type       String   @default("live") // "live" | "vod" | "series"
+  number     Int?
+  epgId      String?
+  playlistId String
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  favorites  Favorite[]
+}
+
+model Favorite {
+  id         String   @id @default(cuid())
+  channelId  String
+  channel    Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  playlistId String
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+}
